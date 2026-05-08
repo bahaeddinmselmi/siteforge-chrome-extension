@@ -41,8 +41,8 @@ Click the **SiteForge** icon to open the popup. You will see these buttons:
    - Downloads `siteforge-wp-theme.zip`.
 
 4. **Scrape All Pages** (experimental)  
-   - Attempts to crawl internal links from the current page.  
-   - Builds a multi-page Next.js app from the collected pages.  
+   - Crawls internal links and exports one Next.js route per discovered page.  
+   - Adds a `PAGES.md` route guide and a route-aware sitemap.  
    - Downloads `siteforge-multipage.zip`.
 
 5. **Deploy to Vercel**  
@@ -64,6 +64,8 @@ The exported ZIP (`siteforge-next-app.zip`) is a complete Next.js 14 app with:
 - SEO helpers: `public/sitemap.xml`, `public/robots.txt`.
 - `COMPONENTS.md` – detected layout patterns (header/footer/cards/etc.).
 - Standard Next.js config files and a helpful project `README.md`.
+
+When multi-page crawling is used, the ZIP also includes route files under `app/.../page.jsx` and a `PAGES.md` route map.
 
 ### Running the exported Next.js app
 

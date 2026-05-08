@@ -1,5 +1,19 @@
 (function(){
-  function meta(){const m={};document.querySelectorAll('meta[name],meta[property]').forEach(x=>{const k=x.getAttribute('name')||x.getAttribute('property');if(k&&!m[k])m[k]=x.getAttribute('content')||'';});return{url:location.href,title:document.title||'',meta:m};}
+  function meta(){
+    const m={};
+    document.querySelectorAll('meta[name],meta[property]').forEach(x=>{
+      const k=x.getAttribute('name')||x.getAttribute('property');
+      if(k&&!m[k])m[k]=x.getAttribute('content')||'';
+    });
+    return{
+      url:location.href,
+      title:document.title||'',
+      lang:document.documentElement.lang||'',
+      bodyClass:document.body&&document.body.className?String(document.body.className):'',
+      meta:m
+    };
+  }
+
   async function fetchAssets(){
     const assets={};
     const urlMap={};
@@ -29,10 +43,11 @@
             reader.readAsDataURL(blob);
           });
         }
-      }catch(_){}
+      }catch(_){ }
     }
     return{assets,urlMap};
   }
+
   async function fetchBackgroundImages(){
     const bgAssets={};
     const urlMap={};
@@ -71,10 +86,11 @@
             reader.readAsDataURL(blob);
           });
         }
-      }catch(_){}
+      }catch(_){ }
     }
     return{bgAssets,urlMap};
   }
+
   async function fetchStyles(){
     const styles={};
     const links=Array.from(document.querySelectorAll('link[rel="stylesheet"]')).slice(0,10);
@@ -85,7 +101,7 @@
           const path=new URL(l.href).pathname.split('/').pop()||'style.css';
           styles[path]=await r.text();
         }
-      }catch(_){}
+      }catch(_){ }
     }
     const allInlineStyles=Array.from(document.querySelectorAll('style')).map(s=>s.textContent).join('\n\n');
     if(allInlineStyles){
@@ -98,6 +114,7 @@
     }
     return styles;
   }
+
   async function createSnapshot(opts){
     const info=meta();
     const html=document.documentElement.outerHTML;
@@ -110,6 +127,8 @@
     return{
       url:info.url,
       title:info.title,
+      lang:info.lang,
+      bodyClass:info.bodyClass,
       meta:info.meta,
       fullHtml:html,
       inlineStyles,
@@ -119,25 +138,33 @@
       summary:{assetsCount:Object.keys(allAssets).length,stylesCount:Object.keys(styles).length}
     };
   }
+
   async function crawlPages(maxPages=10){
-    const visited=new Set([location.href]);
+    const visited=new Set();
     const pages=[];
     const queue=[location.href];
-    let count=0;
-    
-    while(queue.length>0&&count<maxPages){
+
+    while(queue.length>0&&pages.length<maxPages){
       const url=queue.shift();
       if(visited.has(url))continue;
       visited.add(url);
-      count++;
-      
+
       try{
         const r=await fetch(url);
         if(!r.ok)continue;
         const html=await r.text();
         const parser=new DOMParser();
         const doc=parser.parseFromString(html,'text/html');
-        
+        const body=doc.body||null;
+
+        pages.push({
+          url,
+          html,
+          title:doc.title||'Page',
+          lang:doc.documentElement.lang||'',
+          bodyClass:body&&body.className?String(body.className):''
+        });
+
         const links=Array.from(doc.querySelectorAll('a[href]')).slice(0,20);
         for(const a of links){
           let href=a.getAttribute('href');
@@ -147,23 +174,22 @@
             if(u.origin===location.origin&&!visited.has(u.href)){
               queue.push(u.href);
             }
-          }catch(_){}
+          }catch(_){ }
         }
-        
-        pages.push({url,html,title:doc.title||'Page'});
-      }catch(_){}
+      }catch(_){ }
     }
+
     return pages;
   }
-  
+
   async function detectWordPress(){
     try{
       const r=await fetch('/wp-json/wp/v2/posts?per_page=1');
       if(r.ok)return true;
-    }catch(_){}
+    }catch(_){ }
     return false;
   }
-  
+
   async function fetchWordPressPosts(limit=10){
     const posts=[];
     try{
@@ -182,9 +208,9 @@
           });
         }
       }
-    }catch(_){}
+    }catch(_){ }
     return posts;
   }
-  
+
   self.SiteForgeScraper={createSnapshot,crawlPages,detectWordPress,fetchWordPressPosts};
 })();
