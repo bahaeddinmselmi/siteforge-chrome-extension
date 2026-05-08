@@ -33,9 +33,9 @@ async function build(opts){
       filename='siteforge-wp-theme.zip';
     }else if(opts.multiPage){
       status('[50%] Crawling all pages...');
-      const pages=await new Promise(r=>{chrome.tabs.sendMessage(tab.id,{type:'SITEFORGE_CRAWL_PAGES'},reply=>{r(reply&&reply.pages||[]);});});
-      status('[60%] Building multi-page Next.js app...');
-      result=await Builder.buildStaticCopyZip(snap);
+      const pages=await new Promise((res,rej)=>{chrome.tabs.sendMessage(tab.id,{type:'SITEFORGE_CRAWL_PAGES',maxPages:20},reply=>{if(chrome.runtime.lastError)return rej(chrome.runtime.lastError);if(!reply||!reply.ok)return rej(new Error((reply&&reply.error)||'crawl failed'));res(reply.pages||[]);});});
+      status('[60%] Building multi-page Next.js app from '+pages.length+' crawled page'+(pages.length===1?'':'s')+'...');
+      result=await Builder.buildStaticCopyZip({...snap,pages});
       zipBlob=result.blob;
       filename='siteforge-multipage.zip';
     }else{

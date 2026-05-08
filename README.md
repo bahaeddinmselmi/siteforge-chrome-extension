@@ -55,7 +55,7 @@ The generated theme is compatible with standard WP installations:
 *   **Install it**: Upload ZIP to WordPress -> Appearance -> Themes -> Activate.
 
 ## 🤝 Roadmap
-*   [ ] Multi-page scraping (Experimental feature included)
+*   [ ] Multi-page scraping (route export and guide)
 *   [ ] React Component isolation
 *   [ ] Figma export
 
